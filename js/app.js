@@ -1,8 +1,9 @@
 //variables
 let timer;
-let moviesTemp;
+let ratingsHtml;
 //selectors
 const inputSearch = document.querySelector("#search");
+const banner = document.querySelector(".banner");
 const cardsContainer = document.querySelector(".cards-container");
 
 //events
@@ -27,7 +28,6 @@ cardsContainer.addEventListener("click", (event) => {
     const movieID = event.target.getAttribute("movie-id");
     console.log(movieID);
     showMovie(movieID);
-    
   }
 });
 
@@ -49,7 +49,7 @@ async function getMovies(title) {
 
 function imprimirDatos(movies) {
   clearMovies();
-  
+
   if (!movies) {
     const titleAlert = document.createElement("h2");
     titleAlert.classList.add("alert");
@@ -57,9 +57,7 @@ function imprimirDatos(movies) {
     cardsContainer.appendChild(titleAlert);
     return;
   }
-  moviesTemp = [];
   movies.forEach((movie) => {
-    moviesTemp.push(movie);
     const card = document.createElement("div");
     card.classList.add("card");
     card.innerHTML = `<img
@@ -71,7 +69,7 @@ function imprimirDatos(movies) {
           <button type="button" class="btn-show" movie-id="${movie.imdbID}">Ver mas</button>`;
     cardsContainer.appendChild(card);
   });
-console.log(moviesTemp);
+
   // loadEventListenersBtn();
 }
 
@@ -81,9 +79,55 @@ function clearMovies() {
   }
 }
 
-function showMovie(movieID) {
-   const findMovie = moviesTemp.find((movie)=> movie.imdbID == movieID)
-   console.log(findMovie);
+async function showMovie(movieID) {
+  try {
+    const URL = `http://www.omdbapi.com/?i=${movieID}&apikey=25044804`;
+    const respuesta = await fetch(URL);
+    const movieEncontrada = await respuesta.json();
+    console.log(movieEncontrada.Ratings);
+    clearMovies();
+    banner.style.display = "none";
 
-  //  clearMovies();
+    if (movieEncontrada.Ratings.length > 0) {
+      ratingsHtml = movieEncontrada.Ratings.map((score) => {
+        return `<p>${score.Source}<span>${score.Value}</span></p>`;
+      });
+    } else {
+      ratingsHtml = [`<p><span>N/A</span></p>`];
+    }
+
+    const card = document.createElement("div");
+    card.classList.add("card");
+    card.style.width = "100%";
+    card.innerHTML = `<img
+          src="${movieEncontrada.Poster}"
+          alt="Poster" style="width: 30%;"/>
+          <h2 class="title-card">${movieEncontrada.Title}</h2>
+          <p>Year<span>${movieEncontrada.Year}</span></p>
+          <p>Rated<span>${movieEncontrada.Rated}</span></p>
+          <p>Released<span>${movieEncontrada.Released}</span></p>
+          <p>Runtime<span>${movieEncontrada.Runtime}</span></p>
+          <p>Genre<span>${movieEncontrada.Genre}</span></p>
+          <p>Director<span>${movieEncontrada.Director}</span></p>
+          <p>Writer<span>${movieEncontrada.Writer}</span></p>
+          <p>Actors<span>${movieEncontrada.Actors}</span></p>
+          <p>Plot<span>${movieEncontrada.Plot}</span></p>
+          <p>Language<span>${movieEncontrada.Language}</span></p>
+          <p>Country<span>${movieEncontrada.Country}</span></p>
+          <p>Awards<span>${movieEncontrada.Awards}</span></p>
+          <p>Ratings</p>
+          ${ratingsHtml.join("")}
+          <p>Metascore<span>${movieEncontrada.Metascore}</span></p>
+          <p>imdbRating<span>${movieEncontrada.imdbRating}</span></p>
+          <p>imdbVotes<span>${movieEncontrada.imdbVotes}</span></p>
+          <p>imdbID<span>${movieEncontrada.imdbID}</span></p>
+          <p>DVD<span>${movieEncontrada.DVD}</span></p>
+          <p>BoxOffice<span>${movieEncontrada.BoxOffice}</span></p>
+          <p>Production<span>${movieEncontrada.Production}</span></p>
+          <p>Website<span>${movieEncontrada.Website}</span></p>
+          `;
+    cardsContainer.appendChild(card);
+  } catch (error) {
+    console.log(error);
+  }
 }
